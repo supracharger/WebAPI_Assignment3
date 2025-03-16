@@ -111,9 +111,9 @@ router.route('/movies')
 
 router.route('/movies/:movieId')
     .get(authJwtController.isAuthenticated, async (req, res) => {
-      const id = req.params.movieId
       try {
-        const mov = await Movie.find.findById(id);
+        const id = req.params.movieId
+        const mov = await Movie.findById(id);
       } catch {
         mov = false;
       }
