@@ -69,10 +69,92 @@ router.post('/signin', async (req, res) => { // Use async/await
 
 router.route('/movies')
     .get(authJwtController.isAuthenticated, async (req, res) => {
-        return res.status(500).json({ success: false, message: 'GET request not supported' });
+        const movies = await Movie.find();
+        return res.status(200).json(movies);
     })
     .post(authJwtController.isAuthenticated, async (req, res) => {
-        return res.status(500).json({ success: false, message: 'POST request not supported' });
+      var error = '';
+      if (!req.body.title)
+        error = 'Movie needs a title!';
+      if (!req.body.releaseDate)
+        error = 'Movie needs a releaseDate!';
+      if (!req.body.genre)
+        error = 'Movie needs a genre!';
+      if (!req.body.actors)
+        error = 'Movie needs actors!';
+      if (error!='')
+        return res.status(500).json({ success: false, message: error });
+      const mov = new Movie({
+        title: req.body.title,
+        releaseDate: req.body.releaseDate,
+        genre: req.body.genre,
+        actors: req.body.actors
+      });
+      try {
+        await mov.save();
+      } catch (err) {
+        if (err.code === 11000) { // Strict equality check (===)
+          return res.status(409).json({ success: false, message: 'A movie with that name already exists.' }); // 409 Conflict
+        } else {
+          console.error(err); // Log the error for debugging
+          return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' }); // 500 Internal Server Error
+        }
+      }
+      return res.status(201).json({ movie: mov, success: true });
+    })
+    .all((req, res) => {
+      // Any other HTTP Method
+      // Returns a message stating that the HTTP method is unsupported.
+      res.status(405).send({ message: 'HTTP method not supported.' });
+    });
+
+router.route('/movies/:movieId')
+    .get(authJwtController.isAuthenticated, async (req, res) => {
+      const id = req.params.movieId;
+      try {
+        const mov = await Movie.findById(id);
+      } catch {
+        mov = false;
+      }
+      if (!mov)
+        return res.json({success: false, message: 'Unable to find movie.'});
+      return res.status(200).json({movie: mov, success: true});
+    })
+    .put(authJwtController.isAuthenticated, async (req, res) => {
+      const id = req.params.movieId;
+      var obj = {};
+      if (req.body.title)
+        obj['title'] = req.body.title;
+      if (req.body.releaseDate)
+        obj['releaseDate'] = req.body.releaseDate;
+      if (req.body.genre)
+        obj['genre'] = req.body.genre;
+      if (req.body.actors)
+        obj['actors'] = req.body.actors;
+      try {
+        var rp = await Movie.findByIdAndUpdate(id, obj);
+      } catch {
+        rp = false;
+      }
+      if (!rp)
+        return res.json({success: false, message: 'Unable to Update movie.'});
+      return res.status(200).json({success: true, message: 'Updated Movie.'});
+    })
+    .delete(authJwtController.isAuthenticated, async (req, res) => {
+      const id = req.params.movieId;
+      try {
+        var rp = await Movie.findByIdAndDelete(id);
+      } catch {
+        rp = false;
+      }
+      if (!rp)
+        return res.json({success: false, message: 'Unable to Delete movie.'});
+      return res.status(200).json({success: true, message: 'Deleted Movie.'});
+    })
+    .all((req, res) => {
+      // Any other HTTP Method
+      // Returns a message stating that the HTTP method is unsupported.
+      res.status(405).send({ message: 'HTTP method not supported.' });
     });
 
 app.use('/', router);
