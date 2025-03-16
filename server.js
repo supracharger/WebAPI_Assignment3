@@ -132,7 +132,7 @@ router.route('/movies/:movieId')
       if (req.body.actors)
         obj['actors'] = req.body.actors;
       try {
-        const id = req.body._id;
+        const id = req.params.movieId
         var rp = await Movie.findByIdAndUpdate(id, obj);
       } catch {
         rp = false;
@@ -143,7 +143,7 @@ router.route('/movies/:movieId')
     })
     .delete(authJwtController.isAuthenticated, async (req, res) => {
       try {
-        const id = req.body._id;
+        const id = req.params.movieId
         var rp = await Movie.findByIdAndDelete(id);
       } catch {
         rp = false;
