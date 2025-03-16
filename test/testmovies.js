@@ -89,6 +89,20 @@ describe('Test Movie Routes', () => {
         });
     });
 
+    // describe('Find Single Movie', () => {
+    //     it('Find Movie', async () => {
+    //         const res = await chai.request(server)
+    //             .get('/movies')
+    //             .set('Authorization', token)
+    //             .send(testData.movie);
+                
+    //         res.should.have.status(201);
+    //         res.body.should.be.an('object');
+    //         res.body.should.have.property('movie');
+    //         res.body.movie.should.have.property('title', testData.movie.title);
+    //     });
+    // });
+
     after(async () => {
         try {
             await Promise.all([

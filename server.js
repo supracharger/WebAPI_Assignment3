@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const User = require('./Users');
 const Movie = require('./Movies'); // You're not using Movie, consider removing it
+const { default: mongoose } = require('mongoose');
 
 const app = express();
 app.use(cors());
@@ -57,7 +58,7 @@ router.post('/signin', async (req, res) => { // Use async/await
     if (isMatch) {
       const userToken = { id: user._id, username: user.username }; // Use user._id (standard Mongoose)
       const token = jwt.sign(userToken, process.env.SECRET_KEY, { expiresIn: '1h' }); // Add expiry to the token (e.g., 1 hour)
-      res.json({ success: true, token: 'JWT ' + token });
+      res.status(200).json({ success: true, token: 'JWT ' + token });
     } else {
       res.status(401).json({ success: false, msg: 'Authentication failed. Incorrect password.' }); // 401 Unauthorized
     }
@@ -110,18 +111,17 @@ router.route('/movies')
 
 router.route('/movies/:movieId')
     .get(authJwtController.isAuthenticated, async (req, res) => {
-      const id = req.params.movieId;
+      const id = req.params.movieId
       try {
-        const mov = await Movie.findById(id);
+        const mov = await Movie.find.findById(id);
       } catch {
         mov = false;
       }
       if (!mov)
-        return res.json({success: false, message: 'Unable to find movie.'});
+        return res.status(404).json({success: false, message: 'Unable to find movie.'});
       return res.status(200).json({movie: mov, success: true});
     })
     .put(authJwtController.isAuthenticated, async (req, res) => {
-      const id = req.params.movieId;
       var obj = {};
       if (req.body.title)
         obj['title'] = req.body.title;
@@ -132,23 +132,24 @@ router.route('/movies/:movieId')
       if (req.body.actors)
         obj['actors'] = req.body.actors;
       try {
+        const id = req.body._id;
         var rp = await Movie.findByIdAndUpdate(id, obj);
       } catch {
         rp = false;
       }
       if (!rp)
-        return res.json({success: false, message: 'Unable to Update movie.'});
+        return res.status(404).json({success: false, message: 'Unable to Update movie.'});
       return res.status(200).json({success: true, message: 'Updated Movie.'});
     })
     .delete(authJwtController.isAuthenticated, async (req, res) => {
-      const id = req.params.movieId;
       try {
+        const id = req.body._id;
         var rp = await Movie.findByIdAndDelete(id);
       } catch {
         rp = false;
       }
       if (!rp)
-        return res.json({success: false, message: 'Unable to Delete movie.'});
+        return res.status(404).json({success: false, message: 'Unable to Delete movie.'});
       return res.status(200).json({success: true, message: 'Deleted Movie.'});
     })
     .all((req, res) => {
