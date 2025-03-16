@@ -112,11 +112,7 @@ router.route('/movies')
 router.route('/movies/:movieId')
     .get(authJwtController.isAuthenticated, async (req, res) => {
       const id = req.params.movieId;
-      try {
-        const mov = await Movie.findById(id);
-      } catch {
-        mov = false;
-      }
+      const mov = await Movie.findById(id);
       if (!mov)
         return res.status(404).json({success: false, message: 'Unable to find movie.'});
       return res.status(200).json({movie: mov, success: true});
