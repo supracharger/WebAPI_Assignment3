@@ -111,8 +111,8 @@ router.route('/movies')
 
 router.route('/movies/:movieId')
     .get(authJwtController.isAuthenticated, async (req, res) => {
+      const id = req.params.movieId
       try {
-        const id = req.params.movieId
         const mov = await Movie.findById(id);
       } catch {
         mov = false;
@@ -131,8 +131,8 @@ router.route('/movies/:movieId')
         obj['genre'] = req.body.genre;
       if (req.body.actors)
         obj['actors'] = req.body.actors;
+      const id = req.params.movieId
       try {
-        const id = req.params.movieId
         var rp = await Movie.findByIdAndUpdate(id, obj);
       } catch {
         rp = false;
@@ -142,8 +142,8 @@ router.route('/movies/:movieId')
       return res.status(200).json({success: true, message: 'Updated Movie.'});
     })
     .delete(authJwtController.isAuthenticated, async (req, res) => {
+      const id = req.params.movieId
       try {
-        const id = req.params.movieId
         var rp = await Movie.findByIdAndDelete(id);
       } catch {
         rp = false;
