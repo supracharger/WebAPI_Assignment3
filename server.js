@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const User = require('./Users');
 const Movie = require('./Movies'); // You're not using Movie, consider removing it
+const Review = require('./Reviews'); 
 const { default: mongoose } = require('mongoose');
 
 const app = express();
@@ -70,7 +71,41 @@ router.post('/signin', async (req, res) => { // Use async/await
 
 router.route('/movies')
     .get(authJwtController.isAuthenticated, async (req, res) => {
-        const movies = await Movie.find();
+        // Reviews
+        var reviews = false;
+        if (req.query.reviews && req.query.reviews === "true")
+          reviews = true;
+        // Get All
+        if (!reviews)
+          movies = await Movie.find();    // Get All movies
+        // Get All with reviews
+        else
+          movies = await Movie.aggregate([
+            {
+                $lookup: {
+                  from: "review",
+                  localField: "_id",
+                  foreignField: "movieId",
+                  as: "reviews"
+            }},
+            {
+              $addFields: {
+                avgRating: {
+                  $cond: {
+                    if: { $gt: [{$size: "$reviews"}, 0]},
+                    then: { $avg: "$reviews.rating"},
+                    else: null
+                  }
+                }
+              }
+            },
+            {
+              $sort: {
+                avgRating: -1,
+                title: 1
+              }
+            }
+          ]);
         return res.status(200).json(movies);
     })
     .post(authJwtController.isAuthenticated, async (req, res) => {
@@ -83,6 +118,7 @@ router.route('/movies')
         error = 'Movie needs a genre!';
       if (!req.body.actors)
         error = 'Movie needs actors!';
+      //
       if (error!='')
         return res.status(500).json({ success: false, message: error });
       const mov = new Movie({
@@ -112,7 +148,44 @@ router.route('/movies')
 router.route('/movies/:movieId')
     .get(authJwtController.isAuthenticated, async (req, res) => {
       const id = req.params.movieId;
-      const mov = await Movie.findById(id);
+      // Reviews
+      var reviews = false;
+      if (req.query.reviews && req.query.reviews === "true")
+        reviews = true;
+      // w/o reviews
+      if (!reviews)
+        mov = await Movie.findById(id);
+      // with reviews
+      else
+        mov = await Movie.aggregate([
+          {
+            $match: {_id: new mongoose.Types.ObjectId(id)}
+          },
+          {
+              $lookup: {
+                from: "review",
+                localField: "_id",
+                foreignField: "movieId",
+                as: "reviews"
+          }},
+          {
+            $addFields: {
+              avgRating: {
+                $cond: {
+                  if: { $gt: [{$size: "$reviews"}, 0]},
+                  then: { $avg: "$reviews.rating"},
+                  else: null
+                }
+              }
+            }
+          },
+          {
+            $sort: {
+              avgRating: -1,
+              title: 1
+            }
+          }
+        ]);
       if (!mov)
         return res.status(404).json({success: false, message: 'Unable to find movie.'});
       return res.status(200).json({movie: mov, success: true});
@@ -147,6 +220,48 @@ router.route('/movies/:movieId')
       if (!rp)
         return res.status(404).json({success: false, message: 'Unable to Delete movie.'});
       return res.status(200).json({success: true, message: 'Deleted Movie.'});
+    })
+    .all((req, res) => {
+      // Any other HTTP Method
+      // Returns a message stating that the HTTP method is unsupported.
+      res.status(405).send({ message: 'HTTP method not supported.' });
+    });
+
+    router.route('/reviews')
+    .get(authJwtController.isAuthenticated, async (req, res) => {
+        const reviews = await Review.find(); // Get All Reviews
+        return res.status(200).json(reviews);
+    })
+    .post(authJwtController.isAuthenticated, async (req, res) => {
+      var error = '';
+      if (!req.body.movieId)
+        error = 'Movie needs a movieId!';
+      if (!req.body.username)
+        error = 'Movie needs a username!';
+      if (!req.body.review)
+        error = 'Movie needs review text!';
+      if (!req.body.rating)
+        error = 'Movie needs a rating!';
+      //
+      if (error!='')
+        return res.status(500).json({ success: false, message: error });
+      // Check movie exists
+      const mov = await Movie.findById(req.body.movieId);
+      if (!mov)
+        return res.status(404).json({success: false, message: 'Unable to find movie.'});
+      const rev = new Review({
+        movieId: new mongoose.Types.ObjectId(req.body.movieId),
+        username: req.body.username,
+        review: req.body.review,
+        rating: req.body.rating
+      });
+      try {
+        await rev.save();
+      } catch (err) {
+        console.error(err); // Log the error for debugging
+        return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' }); // 500 Internal Server Error
+      }
+      return res.status(201).json({ review: rev, success: true, message: "Review created!" });
     })
     .all((req, res) => {
       // Any other HTTP Method
