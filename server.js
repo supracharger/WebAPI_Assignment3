@@ -83,7 +83,7 @@ router.route('/movies')
           movies = await Movie.aggregate([
             {
                 $lookup: {
-                  from: "review",
+                  from: "reviews",
                   localField: "_id",
                   foreignField: "movieId",
                   as: "reviews"
@@ -163,7 +163,7 @@ router.route('/movies/:movieId')
           },
           {
               $lookup: {
-                from: "review",
+                from: "reviews",
                 localField: "_id",
                 foreignField: "movieId",
                 as: "reviews"
