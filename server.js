@@ -246,7 +246,8 @@ router.route('/movies/:movieId')
       if (error!='')
         return res.status(500).json({ success: false, message: error });
       // Check movie exists
-      const mov = await Movie.findById(req.body.movieId);
+      try { mov = await Movie.findById(req.body.movieId); }
+      catch { mov = false; }
       if (!mov)
         return res.status(404).json({success: false, message: 'Unable to find movie.'});
       const rev = new Review({
