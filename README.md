@@ -66,6 +66,24 @@ Example JSON Body:
   }
 </code>
 
+### Insert Movie Example
+Send POST request to: https://webapi-assignment3.onrender.com/movies
+
+Example JSON Body:
+
+<code>
+{
+    "title": "Venom",
+    "releaseDate": 2018,
+    "genre": "Science Fiction",
+    "actors": [
+      {"actorName": "Tom Hardy", "characterName": "Eddie Brock / Venom"},
+      {"actorName": "Michelle Williams", "characterName": "Anne Weying"},
+      {"actorName": "Riz Ahmed", "characterName": "Carlton Drake / Riot"}
+    ]
+  }
+</code>
+
 ## Environment Settings
 
 DB = [Mongo Database Endpoint]
@@ -76,6 +94,7 @@ UNIQUE_KEY = examplekey
 
 SECRET_KEY = examplesecretkey 
 
+## Movie Routes
 
 | Route | GET | POST | PUT | DELETE |
 | --- | --- | --- | --- | --- |
