@@ -244,13 +244,17 @@ router.route('/movies/:movieId')
       if (!req.body.rating)
         error = 'Movie needs a rating!';
       //
-      if (error!='')
+      if (error!='') {
+        console.log(error);
         return res.status(500).json({ success: false, message: error });
+      }
       // Check movie exists
       try { mov = await Movie.findById(req.body.movieId); }
       catch { mov = false; }
-      if (!mov)
+      if (!mov) {
+        console.log('Unable to find movie.');
         return res.status(404).json({success: false, message: 'Unable to find movie.'});
+      }
       const rev = new Review({
         movieId: new mongoose.Types.ObjectId(req.body.movieId),
         username: req.body.username,
@@ -260,6 +264,7 @@ router.route('/movies/:movieId')
       try {
         await rev.save();
       } catch (err) {
+        console.log(err);
         console.error(err); // Log the error for debugging
         return res.status(500).json({ success: false, message: 'Something went wrong. Please try again later.' }); // 500 Internal Server Error
       }
