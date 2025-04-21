@@ -236,13 +236,13 @@ router.route('/movies/:movieId')
     .post(authJwtController.isAuthenticated, async (req, res) => {
       var error = '';
       if (!req.body.movieId)
-        error = 'Movie needs a movieId!';
+        error = 'Review needs a movieId!';
       if (!req.body.username)
-        error = 'Movie needs a username!';
+        error = 'Review needs a username!';
       if (!req.body.review)
-        error = 'Movie needs review text!';
+        error = 'Review needs review text!';
       if (!req.body.rating)
-        error = 'Movie needs a rating!';
+        error = 'Review needs a rating!';
       //
       if (error!='') {
         console.log(error);
