@@ -188,6 +188,7 @@ router.route('/movies/:movieId')
         ]);
       if (!mov)
         return res.status(404).json({success: false, message: 'Unable to find movie.'});
+      mov = JSON.parse(JSON.stringify(mov))
       return res.status(200).json({...mov[0], success: true});
     })
     .put(authJwtController.isAuthenticated, async (req, res) => {
